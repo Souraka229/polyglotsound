@@ -68,8 +68,9 @@ def make_excerpt(src: str, start_s: float, dur_s: float, out: Path) -> Path:
     """Cut a refrain out of a full song (the original file is not modified)."""
     import subprocess
     out.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run([A.ffmpeg_bin(), "-v", "error", "-y", "-ss", str(start_s), "-t", str(dur_s), "-i", str(src),
-                    "-ar", str(SR), "-ac", "2", str(out)], check=True)
+    cut = ["-ss", str(start_s)] + (["-t", str(dur_s)] if dur_s and dur_s > 0 else [])
+    subprocess.run([A.ffmpeg_bin(), "-v", "error", "-y", *cut, "-i", str(src),
+                    "-vn", "-ar", str(SR), "-ac", "2", str(out)], check=True)
     return out
 
 

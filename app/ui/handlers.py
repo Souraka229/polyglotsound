@@ -39,7 +39,10 @@ def analyse(file, src, tgt, start_s, dur_s, progress=gr.Progress()):
     if src == tgt:
         raise gr.Error("Choisissez une langue cible differente de la langue originale.")
     p = P.new_project(file, src, tgt)
-    if dur_s and dur_s > 0:
+    if Path(file).suffix.lower() not in A.SUPPORTED:
+        raise gr.Error(f"Format {Path(file).suffix} non pris en charge. Formats : {', '.join(sorted(A.SUPPORTED))}")
+    is_video = Path(file).suffix.lower() in {".mp4", ".mov", ".mkv", ".webm", ".avi", ".3gp"}
+    if (dur_s and dur_s > 0) or is_video:
         progress(0.02, desc="Decoupe de l'extrait")
         p.source_path = str(P.make_excerpt(file, float(start_s or 0), float(dur_s), p.dir / "extrait.wav"))
         p.analysis["original_file"] = str(file)

@@ -44,7 +44,8 @@ def build() -> gr.Blocks:
 
         with gr.Tab("1 · Morceau"):
             with gr.Row():
-                file = gr.Audio(label="Votre morceau (MP3, WAV, FLAC)", type="filepath")
+                file = gr.File(label="Votre morceau : audio (MP3, WAV, FLAC, M4A...) ou video (MP4, MOV, MKV, WEBM)",
+                               file_types=["audio", "video", ".mp4", ".mov", ".mkv", ".webm", ".m4a"], type="filepath")
                 with gr.Column():
                     src = gr.Dropdown(H.LANG_CHOICES, value="fon", label="Langue chantee")
                     tgt = gr.Dropdown(H.LANG_CHOICES, value="fra", label="Langue de la nouvelle version")

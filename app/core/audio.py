@@ -8,7 +8,8 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
-SUPPORTED = {".mp3", ".wav", ".flac", ".ogg", ".m4a"}
+SUPPORTED = {".mp3", ".wav", ".flac", ".ogg", ".m4a", ".aac", ".opus", ".wma", ".aiff", ".aif",
+             ".mp4", ".mov", ".mkv", ".webm", ".avi", ".3gp"}   # videos: FFmpeg extracts the audio track
 
 
 def ffmpeg_bin() -> str:
@@ -24,7 +25,7 @@ def load(path: str | Path, sr: int = 44100, mono: bool = False) -> np.ndarray:
     if path.suffix.lower() not in SUPPORTED:
         raise ValueError(f"Format non pris en charge : {path.suffix}")
     ch = 1 if mono else 2
-    cmd = [ffmpeg_bin(), "-v", "error", "-i", str(path), "-f", "f32le", "-acodec", "pcm_f32le",
+    cmd = [ffmpeg_bin(), "-v", "error", "-i", str(path), "-vn", "-f", "f32le", "-acodec", "pcm_f32le",
            "-ac", str(ch), "-ar", str(sr), "-"]
     raw = subprocess.run(cmd, capture_output=True, check=True).stdout
     audio = np.frombuffer(raw, dtype=np.float32).reshape(-1, ch).T.copy()
