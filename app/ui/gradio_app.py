@@ -15,13 +15,17 @@ CONSENT_TEXT = ("Je soussigne(e), artiste, autorise PolyglotSound a utiliser les
 
 
 def build() -> gr.Blocks:
-    theme = gr.themes.Base(primary_hue="amber", neutral_hue="slate", font=[gr.themes.GoogleFont("Inter"), "sans-serif"])
+    theme = gr.themes.Soft(primary_hue="orange", secondary_hue="violet", neutral_hue="slate", text_size="lg",
+                           font=[gr.themes.GoogleFont("Inter"), "Arial", "sans-serif"])
     with gr.Blocks(title="PolyglotSound Studio", theme=theme, css=CSS) as demo:
         pid = gr.State("")
         models = ollama_available()
         with gr.Column(elem_id="ps-hero"):
             gr.Markdown("# PolyglotSound\nFaites voyager votre chanson dans une autre langue, sur votre melodie, "
                         "avec votre voix. L'original n'est jamais modifie.")
+        gr.Markdown("**Comment faire :** ① onglet **1 · Morceau** : importez un audio ou une video, choisissez les "
+                    "langues, cliquez sur **Analyser**. ② En bas de la page : la traduction, puis la **version traduite "
+                    "chantee** a ecouter. ③ Pour un texte seul : onglet **Traduction des paroles**.", elem_id="ps-steps")
         with gr.Row():
             artist = gr.Textbox(label="Nom de l'artiste", value="", scale=2)
             title = gr.Textbox(label="Titre du morceau", scale=2)
@@ -35,12 +39,14 @@ def build() -> gr.Blocks:
                 t_llm = gr.Checkbox(value=False, interactive=bool(models),
                                     label="IA locale pour des versions plus chantables (plus lent)")
             t_text = gr.Textbox(lines=8, label="Paroles", placeholder="Je chante pour toi ce soir / Mon coeur bat au rythme de ta voix")
-            t_go = gr.Button("Traduire", variant="primary", size="lg")
+            t_go = gr.Button("Traduire et ecouter", variant="primary", size="lg", elem_classes="ps-big")
             t_table = gr.Dataframe(headers=["#", "Original", "Traduction fidele", "Version chantable",
                                             "Syllabes (notes -> version)", "Score /100"], wrap=True, interactive=False)
             t_file = gr.File(label="Telecharger la traduction (.txt)")
             with gr.Accordion("Les 3 propositions par ligne et leurs scores detailles", open=False):
                 t_cards = gr.HTML()
+            t_audio_msg = gr.Markdown()
+            t_audio = gr.Audio(label="Ecouter la traduction (voix de synthese)", interactive=False)
 
         with gr.Tab("1 · Morceau"):
             with gr.Row():
@@ -56,7 +62,7 @@ def build() -> gr.Blocks:
                                           label="Duree de l'extrait (s), 0 = tout le morceau", minimum=0)
                     gr.Markdown("Conseil : traitez d'abord un refrain de 20 a 40 s (sur CPU, un morceau "
                                 "complet prend 15 a 30 min).")
-                    go = gr.Button("Analyser le morceau", variant="primary")
+                    go = gr.Button("Analyser le morceau", variant="primary", size="lg", elem_classes="ps-big")
             info = gr.Markdown()
             with gr.Row():
                 voc = gr.Audio(label="Voix isolee", interactive=False)
@@ -135,7 +141,8 @@ def build() -> gr.Blocks:
             files = gr.File(label="Telecharger", file_count="multiple")
             prov = gr.Code(label="Provenance (registre + filigrane)", language="json")
 
-        t_go.click(H.translate_text, [t_text, t_src, t_tgt, t_llm, llm], [t_table, t_cards, t_file])
+        t_go.click(H.translate_text, [t_text, t_src, t_tgt, t_llm, llm], [t_table, t_cards, t_file]).then(
+            H.translation_audio, [t_table, t_tgt], [t_audio, t_audio_msg])
         go.click(H.analyse, [file, src, tgt, start_s, dur_s], [pid, voc, inst, info, hint, lyrics, fig]).then(
             lambda t: t, [lyrics], [a_lyrics]).then(
             H.auto_translate, [a_lyrics, src, tgt], [a_table, a_cards, a_file, a_msg]).then(

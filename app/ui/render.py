@@ -78,24 +78,32 @@ def adaptation_cards(adaptations: list[dict]) -> str:
 
 
 CSS = """
-:root{--ps-bg:#0f0d16;--ps-panel:#16131f;--ps-line:#2b2638;--ps-ink:#ece8f5;--ps-mute:#9c95ad;--ps-acc:#f5a524;--ps-vio:#7c5cff}
-.gradio-container{background:radial-gradient(1200px 500px at 10% -10%,#2a1d4a 0%,transparent 60%),var(--ps-bg)!important;color:var(--ps-ink)}
-#ps-hero h1{font-size:2.2rem;letter-spacing:-.02em;margin:0}
-#ps-hero p{color:var(--ps-mute);margin:.2rem 0 0}
-.ps-line{border:1px solid var(--ps-line);border-radius:14px;padding:14px;margin:12px 0;background:var(--ps-panel)}
-.ps-orig{font-size:1rem}.ps-lit{color:var(--ps-mute);font-size:.85rem;margin-top:4px}
-.ps-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
-.ps-card{border:1px solid var(--ps-line);border-radius:12px;padding:12px;background:#1c1828}
+/* Colors follow the Gradio theme variables: readable in light AND dark mode. */
+.gradio-container{max-width:1180px!important;margin:auto}
+#ps-hero{padding:18px 20px;border-radius:16px;margin-bottom:8px;
+  background:linear-gradient(120deg,#f5a524 0%,#e8590c 55%,#7c3aed 100%);color:#fff}
+#ps-hero h1{font-size:2.1rem;letter-spacing:-.02em;margin:0;color:#fff}
+#ps-hero p{margin:.3rem 0 0;color:#fff;opacity:.95;font-size:1.02rem}
+#ps-steps{font-size:1rem}
+.ps-line{border:1px solid var(--border-color-primary);border-radius:14px;padding:14px;margin:12px 0;
+  background:var(--block-background-fill);color:var(--body-text-color)}
+.ps-orig{font-size:1.05rem}.ps-lit{color:var(--body-text-color-subdued);font-size:.92rem;margin-top:4px}
+.ps-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:10px}
+.ps-card{border:1px solid var(--border-color-primary);border-radius:12px;padding:12px;
+  background:var(--background-fill-secondary);color:var(--body-text-color)}
 .ps-card header{display:flex;justify-content:space-between;align-items:center}
-.ps-badge{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ps-acc)}
-.ps-rej .ps-badge{color:#ef5b5b}.ps-rej{opacity:.7}
-.ps-total{font-size:1.6rem;font-weight:700}
-.ps-text{font-size:1.05rem;margin:.4rem 0}.ps-syl{color:var(--ps-mute);font-size:.8rem;margin:0 0 .5rem}
-.ps-card table{width:100%;font-size:.8rem;border-collapse:collapse}.ps-card td{padding:2px 0}
-.ps-bar{display:inline-block;width:70%;height:6px;background:#2b2638;border-radius:3px;vertical-align:middle}
-.ps-bar div{height:6px;border-radius:3px}.ps-pct{margin-left:6px;color:var(--ps-mute)}
-.ps-na{color:var(--ps-mute);font-style:italic}.ps-reasons{color:#ef5b5b;font-size:.8rem;margin:.4rem 0 0 1rem}
-.ps-card footer{color:var(--ps-mute);font-size:.72rem;margin-top:6px}
-.ps-foot{color:var(--ps-mute);font-size:.8rem}
-details pre{white-space:pre-wrap;font-size:.8rem;color:var(--ps-mute)}
+.ps-badge{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#c2410c}
+.ps-rej .ps-badge{color:#dc2626}.ps-rej{opacity:.75}
+.ps-total{font-size:1.7rem;font-weight:800}
+.ps-text{font-size:1.1rem;font-weight:600;margin:.4rem 0}
+.ps-syl{color:var(--body-text-color-subdued);font-size:.85rem;margin:0 0 .5rem}
+.ps-card table{width:100%;font-size:.88rem;border-collapse:collapse}.ps-card td{padding:3px 0}
+.ps-bar{display:inline-block;width:68%;height:8px;background:var(--border-color-primary);border-radius:4px;vertical-align:middle}
+.ps-bar div{height:8px;border-radius:4px}.ps-pct{margin-left:6px;font-weight:600}
+.ps-na{color:var(--body-text-color-subdued);font-style:italic}
+.ps-reasons{color:#dc2626;font-size:.85rem;margin:.4rem 0 0 1rem}
+.ps-card footer{color:var(--body-text-color-subdued);font-size:.78rem;margin-top:6px}
+.ps-foot{color:var(--body-text-color-subdued);font-size:.85rem}
+details pre{white-space:pre-wrap;font-size:.85rem}
+.ps-big button{font-size:1.1rem!important;padding:14px!important}
 """

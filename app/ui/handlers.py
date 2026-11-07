@@ -249,3 +249,26 @@ def auto_song(pid, text, artist, title, progress=gr.Progress()):
     out = quick_song(pid, text, artist, title, False, None, False, progress=progress)
     return out[5], out[6], ("**Version traduite chantee** (voix de synthese experimentale) : ecoutez-la ci-dessus. "
                             "Pour la voix d'origine ou pour choisir d'autres propositions : onglets **2** et **3**.")
+
+
+def translation_audio(table, tgt, progress=gr.Progress()):
+    """Read the singable translation aloud with the synthetic voice of the target language (no song needed)."""
+    import tempfile
+
+    import numpy as np
+
+    from engines.singing_voice_conversion.guide_synth import WSR, speak
+    rows = table.values.tolist() if hasattr(table, "values") else (table or [])
+    lines = [str(r[3]).strip() for r in rows if len(r) > 3 and str(r[3]).strip()]
+    if not lines:
+        return None, "Traduisez d'abord des paroles."
+    parts, pause = [], np.zeros(int(0.6 * WSR), np.float32)
+    for i, l in enumerate(lines):
+        progress((i + 0.5) / len(lines), desc=f"Lecture de la ligne {i + 1}/{len(lines)}")
+        parts += [speak(l, tgt).astype(np.float32), pause]
+    wav = np.concatenate(parts)
+    wav = 0.9 * wav / (np.max(np.abs(wav)) or 1.0)
+    out = Path(tempfile.mkdtemp()) / f"traduction_{tgt}.wav"
+    A.save(out, wav[None], WSR)
+    return str(out), (f"**Traduction en audio** ({LANGUAGES[tgt].name}, voix de synthese lue). Pour l'entendre "
+                      "chantee sur votre musique : onglet **1 · Morceau**.")
