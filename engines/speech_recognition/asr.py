@@ -21,7 +21,17 @@ WHISPER_SIZE = "small"
 
 @lru_cache(maxsize=1)
 def _whisper(size: str = WHISPER_SIZE):
+    import os
+
+    import ctranslate2
     from faster_whisper import WhisperModel
+    if os.environ.get("POLYGLOT_DEVICE", "auto") != "cpu" and ctranslate2.get_cuda_device_count() > 0:
+        try:                                       # GPU when it really works, CPU otherwise
+            model = WhisperModel("large-v3" if size == "auto" else size, device="cuda", compute_type="float16")
+            list(model.transcribe(np.zeros(16000, dtype=np.float32), beam_size=1)[0])
+            return model
+        except Exception as exc:
+            print(f"[Whisper] GPU indisponible ({str(exc)[:120]}), retour au CPU")
     return WhisperModel(size, device="cpu", compute_type="int8")
 
 

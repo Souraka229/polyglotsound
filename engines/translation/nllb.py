@@ -23,9 +23,19 @@ class NLLBTranslator:
         import sentencepiece as spm
         if not (Path(model_dir) / "model.bin").exists():
             raise FileNotFoundError(f"Modele NLLB absent : {model_dir}. Lancez scripts/download_models.py")
-        self.translator = ctranslate2.Translator(str(model_dir), device="cpu", compute_type="int8",
-                                                 intra_threads=threads or max(1, os.cpu_count() or 1))
         self.sp = spm.SentencePieceProcessor(model_file=str(Path(model_dir) / "sentencepiece.bpe.model"))
+        self.device = "cpu"
+        cpu_threads = threads or max(1, os.cpu_count() or 1)
+        if os.environ.get("POLYGLOT_DEVICE", "auto") != "cpu" and ctranslate2.get_cuda_device_count() > 0:
+            try:                                   # GPU if it really works (cuDNN mismatch shows up at first use)
+                self.translator = ctranslate2.Translator(str(model_dir), device="cuda", compute_type="float16")
+                self.translate("Bonjour", "fra", "eng")
+                self.device = "cuda"
+                return
+            except Exception as exc:
+                print(f"[NLLB] GPU indisponible ({str(exc)[:120]}), retour au CPU")
+        self.translator = ctranslate2.Translator(str(model_dir), device="cpu", compute_type="int8",
+                                                 intra_threads=cpu_threads)
 
     def translate(self, text: str, src: str, tgt: str, n_best: int = 1, sampling: bool = False,
                   beam: int = 5) -> list[str]:

@@ -22,6 +22,10 @@ if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then IDX
 echo "PyTorch : $IDX"
 uv pip install --python "$PY" torch==2.5.1 torchaudio==2.5.1 --index-url "https://download.pytorch.org/whl/$IDX"
 uv pip install --python "$PY" -r requirements.txt httpx
+if [ "$IDX" != "cpu" ]; then
+  # ctranslate2 4.4 attend cuDNN 8, PyTorch cu121 apporte cuDNN 9 : 4.5+ gere cuDNN 9 (GPU pour NLLB et Whisper)
+  uv pip install --python "$PY" "ctranslate2==4.5.0"
+fi
 
 step "3/6 modeles (NLLB int8, Demucs, AudioSeal, Whisper small)"
 "$PY" scripts/download_models.py
