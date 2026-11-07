@@ -18,13 +18,13 @@ DEFAULT_MODEL_DIR = Path(os.environ.get("POLYGLOT_NLLB_DIR", ROOT / "models" / "
 
 
 class NLLBTranslator:
-    def __init__(self, model_dir: Path = DEFAULT_MODEL_DIR, threads: int = 4):
+    def __init__(self, model_dir: Path = DEFAULT_MODEL_DIR, threads: int | None = None):
         import ctranslate2
         import sentencepiece as spm
         if not (Path(model_dir) / "model.bin").exists():
             raise FileNotFoundError(f"Modele NLLB absent : {model_dir}. Lancez scripts/download_models.py")
         self.translator = ctranslate2.Translator(str(model_dir), device="cpu", compute_type="int8",
-                                                 intra_threads=threads)
+                                                 intra_threads=threads or max(1, os.cpu_count() or 1))
         self.sp = spm.SentencePieceProcessor(model_file=str(Path(model_dir) / "sentencepiece.bpe.model"))
 
     def translate(self, text: str, src: str, tgt: str, n_best: int = 1, sampling: bool = False,

@@ -184,7 +184,7 @@ def preview_choice(pid, table, artist, title, progress=gr.Progress()):
         f"**Nouvelle version {res['version']} prete** avec vos choix : ecoutez-la dans l'onglet **2 · Paroles**.")
 
 
-def translate_text(text, src, tgt, use_llm, model, progress=gr.Progress()):
+def translate_text(text, src, tgt, use_llm, model, progress=gr.Progress(), fast=False):
     """Lyrics only, no audio: faithful translation + best singable adaptation per line (same syllable count)."""
     import numpy as np
 
@@ -212,7 +212,7 @@ def translate_text(text, src, tgt, use_llm, model, progress=gr.Progress()):
     for i, tpl in enumerate(templates):
         progress((i + 0.5) / len(templates), desc=f"Ligne {i + 1}/{len(templates)}")
         partners = [rhyme_keys[tpl.rhyme_group]] if tpl.rhyme_group in rhyme_keys else []
-        res = adapt_line(tpl, src, tgt, tr, partner_keys=partners, use_llm=use_llm, llm_model=model or None)
+        res = adapt_line(tpl, src, tgt, tr, partner_keys=partners, use_llm=use_llm, llm_model=model or None, fast=fast)
         best = res.top3[0]
         if tpl.rhyme_group and tpl.rhyme_group not in rhyme_keys:
             rhyme_keys[tpl.rhyme_group] = syllabify(best.text, tgt).rhyme_key
@@ -234,7 +234,7 @@ def auto_translate(text, src, tgt, progress=gr.Progress()):
                + (" (Whisper ne reconnait pas le fon)" if src == "fon" else "")
                + " : tapez les paroles dans la case ci-dessus puis cliquez sur **Traduire ces paroles**.")
         return [], "", None, msg
-    rows, cards, path = translate_text(text, src, tgt, False, None, progress=progress)
+    rows, cards, path = translate_text(text, src, tgt, False, None, progress=progress, fast=True)
     return rows, cards, path, (f"**Proposition en {LANGUAGES[tgt].name}** pour {len(rows)} ligne(s). "
                                "Corrigez les paroles si besoin puis cliquez sur *Traduire ces paroles*, ou allez a "
                                "l'onglet **2 · Paroles** pour creer la nouvelle chanson.")

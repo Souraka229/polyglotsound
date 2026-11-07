@@ -35,12 +35,18 @@ def _score(text: str, source: str, tpl: LineTemplate, src: str, tgt: str, litera
 
 def adapt_line(tpl: LineTemplate, src: str, tgt: str, translator, partner_keys: list[str] | None = None,
                manual: list[str] | None = None, llm_model: str | None = None, max_rounds: int = 2,
-               use_llm: bool = True) -> LineAdaptation:
+               use_llm: bool = True, fast: bool = False) -> LineAdaptation:
+    """fast=True: ONE NLLB call per line (3 hypotheses, no back-translation). The meaning criterion then
+    falls back to chrF against the literal translation. Used for the instant proposal in the studio."""
     partner_keys = partner_keys or []
     log: list[str] = []
-    nbest = translator.translate(tpl.line.text, src, tgt, n_best=5, beam=6)
+    nbest = translator.translate(tpl.line.text, src, tgt, n_best=3 if fast else 5, beam=3 if fast else 6)
     literal = nbest[0]
-    literal_rt = chrf(round_trip(literal, src, tgt, translator), tpl.line.text, beta=1.0)
+    if fast:
+        translator, use_llm, literal_rt = None, False, None
+        log.append("mode rapide : sens estime sans retraduction")
+    else:
+        literal_rt = chrf(round_trip(literal, src, tgt, translator), tpl.line.text, beta=1.0)
     log.append(f"NLLB {src}->{tgt} : {len(nbest)} hypotheses")
     seen: set[str] = set()
     cands: list[AdaptationCandidate] = []
