@@ -1,6 +1,8 @@
 """PolyglotSound artist studio (Gradio). Run: python -m app.ui.gradio_app"""
 from __future__ import annotations
 
+import os
+
 import gradio as gr
 
 from app.ui import handlers as H
@@ -16,6 +18,7 @@ def build() -> gr.Blocks:
     theme = gr.themes.Base(primary_hue="amber", neutral_hue="slate", font=[gr.themes.GoogleFont("Inter"), "sans-serif"])
     with gr.Blocks(title="PolyglotSound Studio", theme=theme, css=CSS) as demo:
         pid = gr.State("")
+        models = ollama_available()
         with gr.Column(elem_id="ps-hero"):
             gr.Markdown("# PolyglotSound\nFaites voyager votre chanson dans une autre langue, sur votre melodie, "
                         "avec votre voix. L'original n'est jamais modifie.")
@@ -29,6 +32,13 @@ def build() -> gr.Blocks:
                 with gr.Column():
                     src = gr.Dropdown(H.LANG_CHOICES, value="fon", label="Langue chantee")
                     tgt = gr.Dropdown(H.LANG_CHOICES, value="fra", label="Langue de la nouvelle version")
+                    with gr.Row():
+                        start_s = gr.Number(value=float(os.environ.get("POLYGLOT_EXCERPT_START", 0)),
+                                            label="Debut de l'extrait (s)", minimum=0)
+                        dur_s = gr.Number(value=float(os.environ.get("POLYGLOT_EXCERPT_DUR", 20)),
+                                          label="Duree de l'extrait (s), 0 = tout le morceau", minimum=0)
+                    gr.Markdown("Conseil : traitez d'abord un refrain de 20 a 40 s (sur CPU, un morceau "
+                                "complet prend 15 a 30 min).")
                     go = gr.Button("Analyser le morceau", variant="primary")
             info = gr.Markdown()
             with gr.Row():
@@ -39,13 +49,19 @@ def build() -> gr.Blocks:
         with gr.Tab("2 · Paroles"):
             hint = gr.Markdown()
             lyrics = gr.Textbox(label="Paroles (une ligne chantee par ligne) : corrigez ou saisissez-les", lines=8)
-            ok_lyr = gr.Button("Valider les paroles", variant="primary")
+            with gr.Row():
+                ok_lyr = gr.Button("Verifier les syllabes seulement")
+                quick = gr.Button("Creer la nouvelle chanson", variant="primary", size="lg")
+            quick_msg = gr.Markdown()
+            with gr.Row():
+                q_orig = gr.Audio(label="Original (extrait)", interactive=False)
+                q_new = gr.Audio(label="Nouvelle chanson (voix de synthese, experimental)", interactive=False)
+            q_files = gr.File(label="Telecharger la nouvelle chanson", file_count="multiple")
             syl_table = gr.Dataframe(headers=["#", "Ligne", "Notes", "Syllabes", "Rime", "Precision du rythme"],
                                      interactive=False, wrap=True)
             fig2 = gr.Plot(label="Syllabes placees sur la melodie (orange = temps fort)")
 
         with gr.Tab("3 · Adaptations"):
-            models = ollama_available()
             with gr.Row():
                 use_llm = gr.Checkbox(value=bool(models), label="Propositions artistiques par IA locale (Ollama)")
                 llm = gr.Dropdown(models, value=("llama3.2:latest" if "llama3.2:latest" in models else
@@ -54,7 +70,9 @@ def build() -> gr.Blocks:
             cards = gr.HTML()
             gr.Markdown("**Votre choix** : remplacez le texte par l'option preferee ou par vos propres mots.")
             choice = gr.Dataframe(headers=["#", "Original", "Adaptation retenue"], interactive=True, wrap=True)
-            save_choice = gr.Button("Valider mes choix")
+            with gr.Row():
+                save_choice = gr.Button("Valider mes choix")
+                relisten = gr.Button("Reecouter avec mes choix", variant="primary")
             choice_msg = gr.Markdown()
             with gr.Accordion("Journal technique", open=False):
                 logs = gr.Textbox(lines=6, show_label=False)
@@ -85,10 +103,13 @@ def build() -> gr.Blocks:
             files = gr.File(label="Telecharger", file_count="multiple")
             prov = gr.Code(label="Provenance (registre + filigrane)", language="json")
 
-        go.click(H.analyse, [file, src, tgt], [pid, voc, inst, info, hint, lyrics, fig])
+        go.click(H.analyse, [file, src, tgt, start_s, dur_s], [pid, voc, inst, info, hint, lyrics, fig])
+        quick.click(H.quick_song, [pid, lyrics, artist, title, use_llm, llm],
+                    [syl_table, fig2, cards, choice, q_orig, q_new, q_files, quick_msg])
         ok_lyr.click(H.validate_lyrics, [pid, lyrics, artist], [syl_table, fig2])
         gen.click(H.adapt, [pid, use_llm, llm], [cards, choice, logs])
         save_choice.click(H.choose, [pid, choice, artist], [choice_msg])
+        relisten.click(H.preview_choice, [pid, choice, artist, title], [q_orig, q_new, q_files, choice_msg])
         consent_btn.click(H.grant, [artist, statement, agree], [consent_msg])
         conv.click(H.convert, [pid, artist, mode, ref, guide, steps], [conv_out, conv_path, conv_msg])
         fin.click(H.finalize, [pid, artist, title, mode, conv_path, gain], [a_orig, a_new, files, prov])

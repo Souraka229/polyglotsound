@@ -64,6 +64,15 @@ def new_project(source_path: str, source_lang: str, target_lang: str) -> Project
     return Project(pid, str(source_path), source_lang, target_lang, d)
 
 
+def make_excerpt(src: str, start_s: float, dur_s: float, out: Path) -> Path:
+    """Cut a refrain out of a full song (the original file is not modified)."""
+    import subprocess
+    out.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run([A.ffmpeg_bin(), "-v", "error", "-y", "-ss", str(start_s), "-t", str(dur_s), "-i", str(src),
+                    "-ar", str(SR), "-ac", "2", str(out)], check=True)
+    return out
+
+
 def step_analyse(p: Project, separation_backend: str = "demucs", run_asr: bool = True) -> Project:
     from engines.audio_separation.separator import save_stems, separate
     from engines.music_analysis.analyzer import analyze
@@ -136,6 +145,35 @@ def step_adapt(p: Project, use_llm: bool = True, llm_model: str | None = None) -
     return p
 
 
+def synth_guide(p: Project) -> Path:
+    """Sing the chosen adapted lyrics with a synthetic voice on the original melody (MMS-TTS + WORLD)."""
+    from engines.singing_voice_conversion.guide_synth import build_guide
+    if not p.adaptations or not any(p.chosen):
+        raise ValueError("Aucune adaptation choisie : lancez d'abord les adaptations.")
+    t0 = time.perf_counter()
+    times, f0 = load_f0(p)
+    rows = []
+    for i, tpl in enumerate(p.templates):
+        text = p.chosen[i] if i < len(p.chosen) else ""
+        cand = next((c for c in p.adaptations[i]["top3"] if c["text"] == text), None) if i < len(p.adaptations) else None
+        if text:
+            rows.append((text, tpl, cand["alignment"] if cand else []))
+    total = p.analysis.get("input", {}).get("duration_s", 30.0)
+    guide = build_guide(rows, p.target_lang, total, times, f0, SR)
+    (p.dir / "voice").mkdir(exist_ok=True)
+    path = A.save(p.dir / "voice" / "guide_auto.wav", guide, SR)
+    p.timings["guide_synth_s"] = round(time.perf_counter() - t0, 1)
+    p.save()
+    return path
+
+
+def step_preview(p: Project, registry, artist_id: int, title: str) -> dict:
+    """Hear the new song right away: synthetic singing voice (no one's voice is cloned) on the
+    original instrumental, watermarked and registered like any generation."""
+    guide = synth_guide(p)
+    return step_finalize(p, str(guide), registry, artist_id, title, "apercu-voix-synthese")
+
+
 def step_voice(p: Project, mode: str, artist_reference: str, registry, artist_id: int,
                guide_vocal: str | None = None, diffusion_steps: int = 25) -> Path:
     """mode 'studio': convert a recorded guide vocal; mode 'auto' (experimental): synthesise the guide first."""
@@ -143,21 +181,8 @@ def step_voice(p: Project, mode: str, artist_reference: str, registry, artist_id
     registry.require_consent(artist_id, "voice_conversion")
     vdir = p.dir / "voice"
     vdir.mkdir(exist_ok=True)
-    t0 = time.perf_counter()
     if mode == "auto":
-        from engines.singing_voice_conversion.guide_synth import build_guide
-        times, f0 = load_f0(p)
-        rows = []
-        for i, tpl in enumerate(p.templates):
-            text = p.chosen[i] if i < len(p.chosen) else ""
-            cand = next((c for c in p.adaptations[i]["top3"] if c["text"] == text), None) if p.adaptations else None
-            mapping = cand["alignment"] if cand else []
-            if text:
-                rows.append((text, tpl, mapping))
-        total = p.analysis.get("input", {}).get("duration_s", 30.0)
-        guide = build_guide(rows, p.target_lang, total, times, f0, SR)
-        guide_vocal = str(A.save(vdir / "guide_auto.wav", guide, SR))
-        p.timings["guide_synth_s"] = round(time.perf_counter() - t0, 1)
+        guide_vocal = str(synth_guide(p))
     elif not guide_vocal:
         raise ValueError("Mode Studio : la voix guide enregistree est obligatoire.")
     res = seed_vc.convert(guide_vocal, artist_reference, vdir, registry=registry, artist_id=artist_id,

@@ -28,23 +28,54 @@ def _fig(p: P.Project):
     return timeline_figure(voc, P.SR, times, f0, p.beats, p.templates)
 
 
-def analyse(file, src, tgt, progress=gr.Progress()):
+NEXT_AFTER_ANALYSE = ("**Etape suivante** : ouvrez l'onglet **2 · Paroles**, corrigez les paroles (une ligne chantee "
+                      "par ligne), puis cliquez sur **Creer la nouvelle chanson**.")
+
+
+def analyse(file, src, tgt, start_s, dur_s, progress=gr.Progress()):
     if not file:
         raise gr.Error("Importez un fichier MP3, WAV ou FLAC.")
     if src == tgt:
         raise gr.Error("Choisissez une langue cible differente de la langue originale.")
-    progress(0.05, desc="Separation voix / instrumental (Demucs, CPU : environ 1 min pour 30 s)")
     p = P.new_project(file, src, tgt)
+    if dur_s and dur_s > 0:
+        progress(0.02, desc="Decoupe de l'extrait")
+        p.source_path = str(P.make_excerpt(file, float(start_s or 0), float(dur_s), p.dir / "extrait.wav"))
+        p.analysis["original_file"] = str(file)
+        p.analysis["excerpt"] = {"start_s": float(start_s or 0), "duration_s": float(dur_s)}
+    progress(0.05, desc="Separation voix / instrumental (Demucs). CPU : environ 1 min pour 12 s d'audio")
     P.step_analyse(p)
     _PROJECTS[p.id] = p
     a = p.analysis
-    info = (f"**Duree** {a['input']['duration_s']} s · **Tempo** {a['tempo_bpm']} BPM · **Tonalite (indicative, non utilisee dans les scores)** {a['key']} "
-            f"· **Segments chantes** {a['voiced_segments']} · **Temps de calcul** {p.timings}")
+    info = (f"**Duree traitee** {a['input']['duration_s']} s · **Tempo** {a['tempo_bpm']} BPM · "
+            f"**Tonalite (indicative)** {a['key']} · **Segments chantes** {a['voiced_segments']} · "
+            f"**Temps de calcul** {p.timings}\n\n{NEXT_AFTER_ANALYSE}")
     notes = "\n".join(f"- {n}" for n in p.asr_notes)
     lyrics = "\n".join(l.text for l in p.lines if l.text)
     conf = "\n".join(f"Ligne {l.index + 1} : confiance {l.confidence.value}" for l in p.lines if l.text)
     hint = notes + ("\n\n" + conf if conf else "")
     return (p.id, str(p.vocals_path), str(p.instrumental_path), info, hint, lyrics, _fig(p))
+
+
+def quick_song(pid, text, artist, title, use_llm, model, progress=gr.Progress()):
+    """One click: lyrics -> 3 scored adaptations -> best chosen -> sung by a synthetic voice -> mix -> player."""
+    p = _proj(pid)
+    if not text.strip():
+        raise gr.Error("Saisissez ou corrigez les paroles (une ligne chantee par ligne).")
+    progress(0.05, desc="Placement des syllabes sur la melodie")
+    rows, fig = validate_lyrics(pid, text, artist)
+    progress(0.2, desc=f"Adaptations ({len(p.templates)} lignes, environ 3 s par ligne sans IA, 15 s avec)")
+    P.step_adapt(p, use_llm=use_llm, llm_model=model or None)
+    progress(0.7, desc="La voix de synthese chante les nouvelles paroles sur la melodie originale")
+    a_id = REG.add_artist(artist or "Artiste")
+    res = P.step_preview(p, REG, a_id, title or "Sans titre")
+    table = [[i + 1, a["original"], p.chosen[i]] for i, a in enumerate(p.adaptations)]
+    status = (f"**Nouvelle chanson prete** (version {res['version']}, filigrane n° {res['watermark_message']}). "
+              "Voix de synthese experimentale : la voix de personne n'est clonee. Pour la chanter avec votre "
+              "propre voix, onglet **4 · Voix** (consentement + reference de votre voix).\n\n"
+              "Vous pouvez remplacer une ligne dans le tableau ci-dessous puis relancer.")
+    return (rows, fig, adaptation_cards(p.adaptations), table, p.source_path, res["wav"],
+            [res["wav"], res["mp3"]], status)
 
 
 def validate_lyrics(pid, text, artist):
@@ -117,3 +148,20 @@ def finalize(pid, artist, title, mode, vocal, gain):
                           "auto" if str(mode).startswith("Auto") else "studio", gain)
     REG.log_validation("final_render", "approved", artist or "artiste", res["wav"], res["generation_id"])
     return p.source_path, res["wav"], [res["wav"], res["mp3"]], json.dumps(res, indent=1, ensure_ascii=False)
+
+
+def preview_choice(pid, table, artist, title, progress=gr.Progress()):
+    """Re-sing the song with the lines chosen or edited by the artist."""
+    p = _proj(pid)
+    choose(pid, table, artist)
+    for i, text in enumerate(p.chosen):                  # score edited lines so their alignment is known
+        if p.adaptations and i < len(p.adaptations) and not any(c["text"] == text for c in p.adaptations[i]["top3"]):
+            from app.schemas.models import AdaptationCandidate
+            from engines.musical_constraints import ScoringContext, score_candidate
+            c = score_candidate(AdaptationCandidate(text=text, language=p.target_lang, source="manual"),
+                                ScoringContext(p.templates[i], p.target_lang))
+            p.adaptations[i]["top3"].append(c.model_dump())
+    progress(0.3, desc="La voix de synthese chante vos choix")
+    res = P.step_preview(p, REG, REG.add_artist(artist or "Artiste"), title or "Sans titre")
+    return p.source_path, res["wav"], [res["wav"], res["mp3"]], (
+        f"**Nouvelle version {res['version']} prete** avec vos choix : ecoutez-la dans l'onglet **2 · Paroles**.")

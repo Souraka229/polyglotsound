@@ -7,6 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 WITH_LLM="${WITH_LLM:-1}"
+WITH_SEEDVC="${WITH_SEEDVC:-1}"
 step() { echo; echo "===== $* ====="; }
 
 step "1/6 outils systeme"
@@ -25,8 +26,12 @@ uv pip install --python "$PY" -r requirements.txt httpx
 step "3/6 modeles (NLLB int8, Demucs, AudioSeal, Whisper small)"
 "$PY" scripts/download_models.py
 
-step "4/6 Seed-VC (voix chantee, environnement isole)"
-bash scripts/setup_seed_vc.sh
+if [ "$WITH_SEEDVC" = "1" ]; then
+  step "4/6 Seed-VC (voix chantee, environnement isole)"
+  bash scripts/setup_seed_vc.sh
+else
+  step "4/6 Seed-VC ignore (WITH_SEEDVC=0) : apercu en voix de synthese seulement"
+fi
 
 if [ "$WITH_LLM" = "1" ]; then
   step "5/6 Ollama + llama3.2 (adaptations artistiques)"
