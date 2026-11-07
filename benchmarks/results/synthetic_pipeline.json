@@ -1,0 +1,58 @@
+{
+ "dataset": "synthetic/fon_refrain_01 (voix MMS-TTS+WORLD, NON representative du chant reel)",
+ "machine": "Intel i5-1135G7, 4 coeurs, 16 Go RAM, CPU seul",
+ "date": "2026-11-07 13:32",
+ "separation": {
+  "backend": "demucs:htdemucs",
+  "seconds": 79.3,
+  "audio_seconds": 12.0,
+  "vocals_sdr_db": 26.05,
+  "instrumental_sdr_db": 25.83,
+  "baseline_mix_as_vocals_sdr_db": -1.61
+ },
+ "analysis_seconds": 71.2,
+ "tempo": {
+  "estimated_bpm": 95.7,
+  "true_bpm": 96,
+  "beat_f_measure_70ms": 0.0
+ },
+ "f0_on_separated_vocals": {
+  "voicing_recall": 0.974,
+  "median_abs_err_semitones": 0.192,
+  "raw_pitch_accuracy_50c": 0.958
+ },
+ "f0_on_true_vocals": {
+  "voicing_recall": 0.912,
+  "median_abs_err_semitones": 0.192,
+  "raw_pitch_accuracy_50c": 0.998
+ },
+ "key": {
+  "estimated": "E minor",
+  "note": "accords C-F-G-C : C major attendu"
+ },
+ "watermark": {
+  "embed_seconds": 57.73,
+  "snr_db": 34.6,
+  "message": 48879,
+  "clean_vocal_unmarked": {
+   "p": 0.0,
+   "message_ok": false
+  },
+  "vocal_marked": {
+   "p": 1.0,
+   "message_ok": true
+  },
+  "mix_marked": {
+   "p": 0.818,
+   "message_ok": true
+  },
+  "mix_marked_mp3_128k": {
+   "p": 0.81,
+   "message_ok": true
+  },
+  "original_mix_unmarked": {
+   "p": 0.181,
+   "message_ok": false
+  }
+ }
+}

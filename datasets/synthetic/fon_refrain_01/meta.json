@@ -1,0 +1,121 @@
+{
+ "synthetic": true,
+ "sr": 44100,
+ "bpm": 96,
+ "beats": [
+  0.0,
+  0.625,
+  1.25,
+  1.875,
+  2.5,
+  3.125,
+  3.75,
+  4.375,
+  5.0,
+  5.625,
+  6.25,
+  6.875,
+  7.5,
+  8.125,
+  8.75,
+  9.375,
+  10.0,
+  10.625,
+  11.25
+ ],
+ "lines": [
+  {
+   "text": "Un yí wǎn nú we",
+   "start": 1.0,
+   "end": 4.125
+  },
+  {
+   "text": "Un yí wǎn nú we kpó ayi ce bǐ kpó",
+   "start": 5.0,
+   "end": 11.875
+  }
+ ],
+ "notes": [
+  {
+   "start": 1.0,
+   "end": 1.625,
+   "midi": 64
+  },
+  {
+   "start": 1.625,
+   "end": 2.25,
+   "midi": 67
+  },
+  {
+   "start": 2.25,
+   "end": 2.875,
+   "midi": 69
+  },
+  {
+   "start": 2.875,
+   "end": 3.5,
+   "midi": 67
+  },
+  {
+   "start": 3.5,
+   "end": 4.125,
+   "midi": 64
+  },
+  {
+   "start": 5.0,
+   "end": 5.625,
+   "midi": 64
+  },
+  {
+   "start": 5.625,
+   "end": 6.25,
+   "midi": 67
+  },
+  {
+   "start": 6.25,
+   "end": 6.875,
+   "midi": 69
+  },
+  {
+   "start": 6.875,
+   "end": 7.5,
+   "midi": 67
+  },
+  {
+   "start": 7.5,
+   "end": 8.125,
+   "midi": 64
+  },
+  {
+   "start": 8.125,
+   "end": 8.75,
+   "midi": 62
+  },
+  {
+   "start": 8.75,
+   "end": 9.375,
+   "midi": 64
+  },
+  {
+   "start": 9.375,
+   "end": 10.0,
+   "midi": 65
+  },
+  {
+   "start": 10.0,
+   "end": 10.625,
+   "midi": 64
+  },
+  {
+   "start": 10.625,
+   "end": 11.25,
+   "midi": 62
+  },
+  {
+   "start": 11.25,
+   "end": 11.875,
+   "midi": 60
+  }
+ ],
+ "warning": "Voix synthetique (MMS-TTS + WORLD). Ne represente pas un chant reel."
+}

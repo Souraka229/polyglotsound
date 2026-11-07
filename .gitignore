@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# poids telecharges (scripts/download_models.py) ; le dictionnaire CMU (BSD) reste versionne
+models/*
+!models/cmudict/
+third_party/
+datasets/projects/
+datasets/registry.db
+datasets/synthetic/*.wav
+datasets/synthetic/*/*.wav
+benchmarks/results/svc/
+benchmarks/results/_*

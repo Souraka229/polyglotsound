@@ -1,0 +1,35 @@
+# PolyglotSound - environnement principal (Python 3.11, Windows, CPU).
+# PyTorch CPU : installer d'abord depuis l'index officiel :
+#   uv pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1
+torchaudio==2.5.1
+numpy==2.0.2
+scipy==1.17.1
+soundfile==0.14.0
+librosa==0.10.2.post1
+matplotlib==3.11.2
+pyworld==0.3.5
+
+# moteurs
+demucs==4.0.1                 # separation (MIT)
+faster-whisper==1.0.3         # ASR fr/en/yo (MIT)
+ctranslate2==4.4.0            # inference NLLB int8 (MIT)
+sentencepiece==0.2.3
+transformers==4.44.2          # MMS-TTS (mode Auto)
+huggingface-hub==0.36.2
+safetensors==0.8.0
+audioseal==0.1.4              # filigrane (MIT, poids MIT)
+setuptools<81                 # ctranslate2 4.4 importe pkg_resources
+
+# app
+pydantic==2.9.2
+fastapi==0.115.0
+uvicorn==0.54.0
+python-multipart==0.0.33
+gradio==4.44.1
+requests==2.34.2
+
+# tests
+pytest==9.2.0
+
+# Seed-VC (conversion de voix chantee) vit dans SON environnement : scripts/setup_seed_vc.ps1

@@ -1,0 +1,20 @@
+{
+  "_note": "Lignes de test ecrites pour PolyglotSound (pas de paroles d'oeuvres existantes). Les lignes fon marquees source=nllb sont des traductions automatiques NON validees : elles servent a tester la mecanique, pas la qualite linguistique. A remplacer par des refrains d'artistes ayant donne leur accord.",
+  "lines": {
+    "fon": [
+      {"text": "Un yí wǎn nú we", "source": "expression courante (je t'aime)", "validated": false},
+      {"text": "Un yí wǎn nú we kpó ayi ce bǐ kpó", "source": "nllb", "validated": false},
+      {"text": "Mawu ni kpé we", "source": "nllb-like, non verifie", "validated": false}
+    ],
+    "fra": [
+      {"text": "Je chante pour toi ce soir"},
+      {"text": "Mon coeur bat au rythme de ta voix"},
+      {"text": "Demain le soleil se levera sur nous"}
+    ],
+    "eng": [
+      {"text": "I sing for you tonight"},
+      {"text": "My heart beats to the rhythm of your voice"},
+      {"text": "Tomorrow the sun will rise for us"}
+    ]
+  }
+}

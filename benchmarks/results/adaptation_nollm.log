@@ -1,0 +1,68 @@
+fon->fra | Un yí wǎn nú we | lit[2] je t'aime | best[0] je t'aime beaucoup (nllb-nbest, 0.912) | 3.2s
+fon->fra | Un yí wǎn nú we kpó ayi ce bǐ kpó | lit[4] je t'aime de tout mon cœur | best[3] je vous aime de tout mon cœur (nllb-nbest, 0.683) | 5.8s
+fon->fra | Mawu ni kpé we | lit[1] que dieu soit avec toi | best[0] que dieu te suffise (nllb-nbest, 0.874) | 2.8s
+fon->eng | Un yí wǎn nú we | lit[2] I love you | best[2] I love you (nllb, 0.822) | 2.6s
+fon->eng | Un yí wǎn nú we kpó ayi ce bǐ kpó | lit[4] I love you with all my heart | best[3] I love you with all of my heart (nllb-nbest, 0.777) | 3.3s
+fon->eng | Mawu ni kpé we | lit[1] may god bless you | best[1] god be enough for you (nllb-nbest, 0.796) | 3.2s
+fra->fon | Je chante pour toi ce soir | lit[2] Un ɖo han ji nú we wɛ égbé | best[1] Un ɖo han na we wɛ égbé (nllb-nbest, 0.829) | 4.1s
+fra->fon | Mon coeur bat au rythme de ta voix | lit[2] Ayi ce nɔ d'alɔ ɖo gbe towe mɛ | best[1] Ayi ce nɔ d'alɔ gbe towe mɛ (nllb-nbest, 0.848) | 4.9s
+fra->fon | Demain le soleil se levera sur nous | lit[3] Azǎn ná tɔ́n dó mǐ jí sɔ | best[2] Azǎn ɔ́ ná tɔ́n dó mǐ jí sɔ (nllb-nbest, 0.796) | 4.3s
+eng->fon | I sing for you tonight | lit[2] Un ɖo han na we wɛ égbé | best[2] Un ɖo han na we wɛ égbé (nllb, 0.78) | 2.9s
+eng->fon | My heart beats to the rhythm of your voice | lit[4] Ayi ce nɔ d'alɔ ɖò xó towe sín xixo jí | best[0] Ayi ce nɔ d'alɔ nú gbe towe (nllb-nbest, 0.943) | 4.9s
+eng->fon | Tomorrow the sun will rise for us | lit[2] Azǎn ɔ́ ná tɔ́n nú mǐ | best[0] Azǎn ɔ́ ná jɛ ayǐ nú mǐ (nllb-nbest, 0.816) | 3.7s
+fra->eng | Je chante pour toi ce soir | lit[0] I'm singing for you tonight | best[0] I'm singing for you tonight (nllb, 0.945) | 4.5s
+fra->eng | Mon coeur bat au rythme de ta voix | lit[0] My heart beats at the beat of your voice | best[0] My heart beats at the beat of your voice (nllb, 0.916) | 3.8s
+fra->eng | Demain le soleil se levera sur nous | lit[1] Tomorrow the sun will rise over us | best[1] Tomorrow the sun will rise over us (nllb, 0.833) | 4.9s
+eng->fra | I sing for you tonight | lit[0] Je chante pour toi ce soir | best[0] Je chante pour toi ce soir (nllb, 0.898) | 3.9s
+eng->fra | My heart beats to the rhythm of your voice | lit[1] Mon cœur bat au rythme de ta voix | best[1] Mon cœur bat au rythme de ta voix (nllb, 0.829) | 10.9s
+eng->fra | Tomorrow the sun will rise for us | lit[2] Demain le soleil se lèvera pour nous | best[2] Demain le soleil se lèvera pour nous (nllb, 0.769) | 3.2s
+{
+ "eng->fra": {
+  "lines": 3,
+  "mean_literal_gap": 1.0,
+  "mean_best_gap": 1.0,
+  "mean_literal_score": 0.832,
+  "mean_best_score": 0.832,
+  "mean_seconds": 6.0
+ },
+ "fon->fra": {
+  "lines": 3,
+  "mean_literal_gap": 2.33,
+  "mean_best_gap": 1.0,
+  "mean_literal_score": 0.787,
+  "mean_best_score": 0.823,
+  "mean_seconds": 3.9
+ },
+ "fra->eng": {
+  "lines": 3,
+  "mean_literal_gap": 0.33,
+  "mean_best_gap": 0.33,
+  "mean_literal_score": 0.898,
+  "mean_best_score": 0.898,
+  "mean_seconds": 4.4
+ },
+ "eng->fon": {
+  "lines": 3,
+  "mean_literal_gap": 2.67,
+  "mean_best_gap": 0.67,
+  "mean_literal_score": 0.767,
+  "mean_best_score": 0.846,
+  "mean_seconds": 3.8
+ },
+ "fra->fon": {
+  "lines": 3,
+  "mean_literal_gap": 2.33,
+  "mean_best_gap": 1.33,
+  "mean_literal_score": 0.781,
+  "mean_best_score": 0.824,
+  "mean_seconds": 4.4
+ },
+ "fon->eng": {
+  "lines": 3,
+  "mean_literal_gap": 2.33,
+  "mean_best_gap": 2.0,
+  "mean_literal_score": 0.785,
+  "mean_best_score": 0.798,
+  "mean_seconds": 3.0
+ }
+}

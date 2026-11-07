@@ -1,0 +1,15 @@
+{
+  "_note": "Lexique d'expressions culturelles a preserver. Les entrees marquees validated=false doivent etre relues par un locuteur natif avant tout usage public. L'artiste peut ajouter ses propres expressions.",
+  "entries": [
+    {"term": "mawu", "language": "fon", "meaning": "divinite supreme (Dieu)", "policy": "keep_or_render",
+     "renderings": {"fra": ["mawu", "dieu"], "eng": ["mawu", "god"]}, "validated": false},
+    {"term": "vodún", "language": "fon", "meaning": "divinite / culte vodoun", "policy": "keep",
+     "renderings": {"fra": ["vodun", "vodoun", "vaudou"], "eng": ["vodun", "voodoo", "vodou"]}, "validated": false},
+    {"term": "danxomɛ", "language": "fon", "meaning": "royaume du Dahomey", "policy": "keep_or_render",
+     "renderings": {"fra": ["danxome", "danxomɛ", "dahomey"], "eng": ["danxome", "danxomɛ", "dahomey"]}, "validated": false},
+    {"term": "cotonou", "language": "*", "meaning": "ville (nom propre)", "policy": "keep",
+     "renderings": {"*": ["cotonou", "kútɔnú"]}, "validated": true},
+    {"term": "bénin", "language": "*", "meaning": "pays (nom propre)", "policy": "keep",
+     "renderings": {"fra": ["bénin", "benin"], "eng": ["benin"], "fon": ["benin", "bénin"]}, "validated": true}
+  ]
+}
