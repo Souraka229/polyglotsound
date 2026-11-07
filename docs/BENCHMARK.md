@@ -70,6 +70,20 @@ transformers signale que les poids `weight_g/weight_v` de MMS-TTS ne sont pas ut
 vérification, les poids reconstruits correspondent au fichier à **1,5e-8** près : l'avertissement
 est sans objet.
 
-## 5. Conversion de voix chantée (Seed-VC)
+## 5. Conversion de voix chantée (Seed-VC, CPU, 25 étapes de diffusion)
 
-Voir `benchmarks/results/svc_seedvc_*.json` (mesure CPU en cours au moment de la rédaction).
+Source : voix fon synthétique (12 s). Référence de timbre : voix MMS-TTS anglaise synthétique
+(n'appartient à personne).
+
+| Mesure | Résultat |
+|---|---|
+| Verrou de consentement | conversion **refusée** sans consentement, acceptée après |
+| Mélodie : précision à 50 cents avant / après conversion | 99,8 % / **71,2 %** |
+| Erreur médiane de hauteur avant / après | 0,19 / 0,19 demi-ton |
+| Rappel du voisement après conversion | 94,4 % |
+| Temps | 2 795 s, **téléchargement des poids (environ 2 Go) compris** : ce n'est pas un temps d'inférence. À remesurer à chaud |
+
+Lecture : la mélodie globale est conservée (erreur médiane inchangée), mais 29 % des trames
+s'écartent de plus de 50 cents. Pistes : `--auto-f0-adjust`, plus d'étapes de diffusion, voix
+de référence chantée plutôt que parlée. La similarité de timbre n'est pas encore mesurée : il
+faut ajouter un encodeur de locuteur.
