@@ -22,3 +22,13 @@ def test_score_endpoint_ranks_and_explains():
 
 def test_consent_requires_explicit_statement():
     assert client.post("/consents", json={"artist": "A", "statement": "ok"}).status_code == 400
+
+
+def test_ui_builds_with_colab_matplotlib_backend():
+    """Regression: Colab exports MPLBACKEND=module://matplotlib_inline... (absent from our venv)."""
+    import subprocess
+    import sys
+    env = dict(__import__("os").environ, MPLBACKEND="module://matplotlib_inline.backend_inline")
+    r = subprocess.run([sys.executable, "-c", "from app.ui.gradio_app import build; build(); print('ok')"],
+                       capture_output=True, text=True, env=env, timeout=300)
+    assert r.returncode == 0 and "ok" in r.stdout, r.stderr[-500:]
