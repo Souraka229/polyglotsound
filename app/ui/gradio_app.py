@@ -49,6 +49,8 @@ def build() -> gr.Blocks:
         with gr.Tab("2 · Paroles"):
             hint = gr.Markdown()
             lyrics = gr.Textbox(label="Paroles (une ligne chantee par ligne) : corrigez ou saisissez-les", lines=8)
+            own_voice = gr.Checkbox(value=False, label=("Chanter avec la voix d'origine du morceau : je declare que "
+                                    "c'est MA voix et j'autorise sa conversion (Seed-VC, enregistre au registre)"))
             with gr.Row():
                 ok_lyr = gr.Button("Verifier les syllabes seulement")
                 quick = gr.Button("Creer la nouvelle chanson", variant="primary", size="lg")
@@ -104,7 +106,7 @@ def build() -> gr.Blocks:
             prov = gr.Code(label="Provenance (registre + filigrane)", language="json")
 
         go.click(H.analyse, [file, src, tgt, start_s, dur_s], [pid, voc, inst, info, hint, lyrics, fig])
-        quick.click(H.quick_song, [pid, lyrics, artist, title, use_llm, llm],
+        quick.click(H.quick_song, [pid, lyrics, artist, title, use_llm, llm, own_voice],
                     [syl_table, fig2, cards, choice, q_orig, q_new, q_files, quick_msg])
         ok_lyr.click(H.validate_lyrics, [pid, lyrics, artist], [syl_table, fig2])
         gen.click(H.adapt, [pid, use_llm, llm], [cards, choice, logs])

@@ -167,11 +167,38 @@ def synth_guide(p: Project) -> Path:
     return path
 
 
-def step_preview(p: Project, registry, artist_id: int, title: str) -> dict:
-    """Hear the new song right away: synthetic singing voice (no one's voice is cloned) on the
-    original instrumental, watermarked and registered like any generation."""
+def original_voice_reference(p: Project, max_s: float = 25.0) -> Path:
+    """Timbre reference = the separated original vocal (Seed-VC uses up to ~25 s)."""
+    voc = A.load(p.vocals_path, SR)
+    mono = voc.mean(0)
+    hop = SR // 10
+    n = len(mono) // hop
+    energy = np.sqrt(np.mean(mono[: n * hop].reshape(n, hop) ** 2, axis=1))
+    keep = np.repeat(energy > 0.25 * np.median(energy[energy > 0]) if np.any(energy > 0) else energy > 0, hop)
+    sung = voc[:, : len(keep)][:, keep]                       # drop silences between phrases
+    sung = sung[:, : int(max_s * SR)] if sung.shape[1] > SR * 3 else voc[:, : int(max_s * SR)]
+    return A.save(p.dir / "voice" / "reference_originale.wav", sung, SR)
+
+
+def step_preview(p: Project, registry, artist_id: int, title: str, original_voice: bool = False,
+                 diffusion_steps: int = 25) -> dict:
+    """Hear the new song right away.
+
+    original_voice=False: synthetic singing voice (no one's voice is cloned).
+    original_voice=True : the synthetic guide is converted by Seed-VC to the timbre of the song's
+    original vocal. Requires an active 'voice_conversion' consent of the artist (checked here).
+    """
     guide = synth_guide(p)
-    return step_finalize(p, str(guide), registry, artist_id, title, "apercu-voix-synthese")
+    if not original_voice:
+        return step_finalize(p, str(guide), registry, artist_id, title, "apercu-voix-synthese")
+    from engines.singing_voice_conversion import seed_vc
+    registry.require_consent(artist_id, "voice_conversion")
+    ref = original_voice_reference(p)
+    res = seed_vc.convert(guide, ref, p.dir / "voice", registry=registry, artist_id=artist_id,
+                          diffusion_steps=diffusion_steps)
+    p.timings["voice_conversion_s"] = res.seconds
+    p.save()
+    return step_finalize(p, str(res.output), registry, artist_id, title, "auto-voix-originale")
 
 
 def step_voice(p: Project, mode: str, artist_reference: str, registry, artist_id: int,

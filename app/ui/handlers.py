@@ -57,7 +57,11 @@ def analyse(file, src, tgt, start_s, dur_s, progress=gr.Progress()):
     return (p.id, str(p.vocals_path), str(p.instrumental_path), info, hint, lyrics, _fig(p))
 
 
-def quick_song(pid, text, artist, title, use_llm, model, progress=gr.Progress()):
+OWN_VOICE_STATEMENT = ("Je declare que la voix chantee dans ce morceau est la mienne et j'autorise PolyglotSound "
+                       "a la convertir pour chanter l'adaptation de ma propre oeuvre.")
+
+
+def quick_song(pid, text, artist, title, use_llm, model, own_voice=False, progress=gr.Progress()):
     """One click: lyrics -> 3 scored adaptations -> best chosen -> sung by a synthetic voice -> mix -> player."""
     p = _proj(pid)
     if not text.strip():
@@ -66,14 +70,23 @@ def quick_song(pid, text, artist, title, use_llm, model, progress=gr.Progress())
     rows, fig = validate_lyrics(pid, text, artist)
     progress(0.2, desc=f"Adaptations ({len(p.templates)} lignes, environ 3 s par ligne sans IA, 15 s avec)")
     P.step_adapt(p, use_llm=use_llm, llm_model=model or None)
-    progress(0.7, desc="La voix de synthese chante les nouvelles paroles sur la melodie originale")
     a_id = REG.add_artist(artist or "Artiste")
-    res = P.step_preview(p, REG, a_id, title or "Sans titre")
+    if own_voice:
+        from engines.singing_voice_conversion import seed_vc
+        ok, msg = seed_vc.available()
+        if not ok:
+            raise gr.Error(f"Voix d'origine indisponible : {msg}")
+        REG.grant_consent(a_id, "voice_conversion", OWN_VOICE_STATEMENT)
+        progress(0.6, desc="Voix guide puis conversion au timbre d'origine (Seed-VC ; GPU : ~1 min, CPU : tres long)")
+    else:
+        progress(0.7, desc="La voix de synthese chante les nouvelles paroles sur la melodie originale")
+    res = P.step_preview(p, REG, a_id, title or "Sans titre", original_voice=bool(own_voice))
     table = [[i + 1, a["original"], p.chosen[i]] for i, a in enumerate(p.adaptations)]
-    status = (f"**Nouvelle chanson prete** (version {res['version']}, filigrane n° {res['watermark_message']}). "
-              "Voix de synthese experimentale : la voix de personne n'est clonee. Pour la chanter avec votre "
-              "propre voix, onglet **4 · Voix** (consentement + reference de votre voix).\n\n"
-              "Vous pouvez remplacer une ligne dans le tableau ci-dessous puis relancer.")
+    voice = ("chantee avec la voix d'origine (Seed-VC, consentement enregistre)" if own_voice else
+             "voix de synthese experimentale, la voix de personne n'est clonee. Pour la voix d'origine, cochez "
+             "la case au-dessus du bouton (uniquement si c'est VOTRE voix)")
+    status = (f"**Nouvelle chanson prete** (version {res['version']}, filigrane n° {res['watermark_message']}) : "
+              f"{voice}.\n\nVous pouvez remplacer une ligne dans l'onglet 3 puis cliquer sur *Reecouter avec mes choix*.")
     return (rows, fig, adaptation_cards(p.adaptations), table, p.source_path, res["wav"],
             [res["wav"], res["mp3"]], status)
 
