@@ -222,3 +222,27 @@ def translate_text(text, src, tgt, use_llm, model, progress=gr.Progress()):
     out = Path(tempfile.mkdtemp()) / f"traduction_{src}_{tgt}.txt"
     out.write_text("\n".join(f"{r[1]}\n  fidele   : {r[2]}\n  chantable: {r[3]}\n" for r in rows), encoding="utf-8")
     return rows, adaptation_cards(adaptations), str(out)
+
+
+def auto_translate(text, src, tgt, progress=gr.Progress()):
+    """Run right after the analysis: propose the lyrics in the chosen language (fast, no LLM)."""
+    if not (text or "").strip():
+        msg = ("Aucune parole reconnue automatiquement"
+               + (" (Whisper ne reconnait pas le fon)" if src == "fon" else "")
+               + " : tapez les paroles dans la case ci-dessus puis cliquez sur **Traduire ces paroles**.")
+        return [], "", None, msg
+    rows, cards, path = translate_text(text, src, tgt, False, None, progress=progress)
+    return rows, cards, path, (f"**Proposition en {LANGUAGES[tgt].name}** pour {len(rows)} ligne(s). "
+                               "Corrigez les paroles si besoin puis cliquez sur *Traduire ces paroles*, ou allez a "
+                               "l'onglet **2 · Paroles** pour creer la nouvelle chanson.")
+
+
+def auto_song(pid, text, artist, title, progress=gr.Progress()):
+    """After the translation: sing the new version (synthetic voice) so it can be heard right away."""
+    if not pid or pid not in _PROJECTS:
+        return None, None, "Importez et analysez d'abord un morceau pour entendre la version traduite."
+    if not (text or "").strip():
+        return None, None, "Tapez les paroles puis cliquez sur **Traduire ces paroles** pour entendre la version traduite."
+    out = quick_song(pid, text, artist, title, False, None, False, progress=progress)
+    return out[5], out[6], ("**Version traduite chantee** (voix de synthese experimentale) : ecoutez-la ci-dessus. "
+                            "Pour la voix d'origine ou pour choisir d'autres propositions : onglets **2** et **3**.")

@@ -61,6 +61,19 @@ def build() -> gr.Blocks:
                 voc = gr.Audio(label="Voix isolee", interactive=False)
                 inst = gr.Audio(label="Instrumental (conserve tel quel)", interactive=False)
             fig = gr.Plot(label="Forme d'onde, temps forts et melodie")
+            gr.Markdown("### Proposition dans la nouvelle langue")
+            a_lyrics = gr.Textbox(lines=6, label="Paroles detectees (corrigez-les ou tapez-les si besoin)")
+            a_go = gr.Button("Traduire ces paroles", variant="primary")
+            a_msg = gr.Markdown()
+            a_table = gr.Dataframe(headers=["#", "Original", "Traduction fidele", "Version chantable",
+                                            "Syllabes (notes -> version)", "Score /100"], wrap=True, interactive=False)
+            a_file = gr.File(label="Telecharger la traduction (.txt)")
+            gr.Markdown("### Ecouter la version traduite")
+            a_song_msg = gr.Markdown("La version chantee se cree automatiquement apres la traduction (1 a 4 min).")
+            a_song = gr.Audio(label="Nouvelle version chantee dans la langue choisie", interactive=False)
+            a_song_files = gr.File(label="Telecharger la version chantee (WAV + MP3)", file_count="multiple")
+            with gr.Accordion("Les 3 propositions par ligne et leurs scores", open=False):
+                a_cards = gr.HTML()
 
         with gr.Tab("2 · Paroles"):
             hint = gr.Markdown()
@@ -122,7 +135,13 @@ def build() -> gr.Blocks:
             prov = gr.Code(label="Provenance (registre + filigrane)", language="json")
 
         t_go.click(H.translate_text, [t_text, t_src, t_tgt, t_llm, llm], [t_table, t_cards, t_file])
-        go.click(H.analyse, [file, src, tgt, start_s, dur_s], [pid, voc, inst, info, hint, lyrics, fig])
+        go.click(H.analyse, [file, src, tgt, start_s, dur_s], [pid, voc, inst, info, hint, lyrics, fig]).then(
+            lambda t: t, [lyrics], [a_lyrics]).then(
+            H.auto_translate, [a_lyrics, src, tgt], [a_table, a_cards, a_file, a_msg]).then(
+            H.auto_song, [pid, a_lyrics, artist, title], [a_song, a_song_files, a_song_msg])
+        a_go.click(H.auto_translate, [a_lyrics, src, tgt], [a_table, a_cards, a_file, a_msg]).then(
+            lambda t: t, [a_lyrics], [lyrics]).then(
+            H.auto_song, [pid, a_lyrics, artist, title], [a_song, a_song_files, a_song_msg])
         quick.click(H.quick_song, [pid, lyrics, artist, title, use_llm, llm, own_voice],
                     [syl_table, fig2, cards, choice, q_orig, q_new, q_files, quick_msg])
         ok_lyr.click(H.validate_lyrics, [pid, lyrics, artist], [syl_table, fig2])
