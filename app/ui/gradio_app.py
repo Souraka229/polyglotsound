@@ -26,6 +26,22 @@ def build() -> gr.Blocks:
             artist = gr.Textbox(label="Nom de l'artiste", value="", scale=2)
             title = gr.Textbox(label="Titre du morceau", scale=2)
 
+        with gr.Tab("Traduction des paroles"):
+            gr.Markdown("Collez vos paroles (une ligne chantee par ligne). Pour chaque ligne : la **traduction fidele**, "
+                        "puis la **version chantable** qui garde le nombre de syllabes. Environ 3 s par ligne.")
+            with gr.Row():
+                t_src = gr.Dropdown(H.LANG_CHOICES, value="fra", label="Langue des paroles")
+                t_tgt = gr.Dropdown(H.LANG_CHOICES, value="eng", label="Traduire en")
+                t_llm = gr.Checkbox(value=False, interactive=bool(models),
+                                    label="IA locale pour des versions plus chantables (plus lent)")
+            t_text = gr.Textbox(lines=8, label="Paroles", placeholder="Je chante pour toi ce soir / Mon coeur bat au rythme de ta voix")
+            t_go = gr.Button("Traduire", variant="primary", size="lg")
+            t_table = gr.Dataframe(headers=["#", "Original", "Traduction fidele", "Version chantable",
+                                            "Syllabes (notes -> version)", "Score /100"], wrap=True, interactive=False)
+            t_file = gr.File(label="Telecharger la traduction (.txt)")
+            with gr.Accordion("Les 3 propositions par ligne et leurs scores detailles", open=False):
+                t_cards = gr.HTML()
+
         with gr.Tab("1 · Morceau"):
             with gr.Row():
                 file = gr.Audio(label="Votre morceau (MP3, WAV, FLAC)", type="filepath")
@@ -105,6 +121,7 @@ def build() -> gr.Blocks:
             files = gr.File(label="Telecharger", file_count="multiple")
             prov = gr.Code(label="Provenance (registre + filigrane)", language="json")
 
+        t_go.click(H.translate_text, [t_text, t_src, t_tgt, t_llm, llm], [t_table, t_cards, t_file])
         go.click(H.analyse, [file, src, tgt, start_s, dur_s], [pid, voc, inst, info, hint, lyrics, fig])
         quick.click(H.quick_song, [pid, lyrics, artist, title, use_llm, llm, own_voice],
                     [syl_table, fig2, cards, choice, q_orig, q_new, q_files, quick_msg])

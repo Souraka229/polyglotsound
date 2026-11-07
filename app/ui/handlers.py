@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import gradio as gr
 
@@ -178,3 +179,46 @@ def preview_choice(pid, table, artist, title, progress=gr.Progress()):
     res = P.step_preview(p, REG, REG.add_artist(artist or "Artiste"), title or "Sans titre")
     return p.source_path, res["wav"], [res["wav"], res["mp3"]], (
         f"**Nouvelle version {res['version']} prete** avec vos choix : ecoutez-la dans l'onglet **2 · Paroles**.")
+
+
+def translate_text(text, src, tgt, use_llm, model, progress=gr.Progress()):
+    """Lyrics only, no audio: faithful translation + best singable adaptation per line (same syllable count)."""
+    import numpy as np
+
+    from app.schemas.models import LyricLine
+    from app.services.adaptation import adapt_line
+    from engines.musical_constraints import assign_rhyme_scheme, build_template
+    from engines.syllable_engine import syllabify
+    from engines.translation.nllb import get_translator
+    lines = [l.strip() for l in (text or "").splitlines() if l.strip()]
+    if not lines:
+        raise gr.Error("Collez des paroles : une ligne chantee par ligne.")
+    if src == tgt:
+        raise gr.Error("Choisissez une langue cible differente de la langue originale.")
+    if len(lines) > 60:
+        raise gr.Error("60 lignes maximum a la fois (environ 3 s par ligne).")
+    step = 0.35                                            # even synthetic timing: one syllable per 0.35 s
+    templates = []
+    for i, l in enumerate(lines):
+        n = max(1, syllabify(l, src).count)
+        templates.append(build_template(LyricLine(index=i, text=l, language=src, start=0.0, end=n * step),
+                                        beats=np.arange(0, n * step + 1, 2 * step)))
+    assign_rhyme_scheme(templates)
+    tr = get_translator()
+    rows, adaptations, rhyme_keys = [], [], {}
+    for i, tpl in enumerate(templates):
+        progress((i + 0.5) / len(templates), desc=f"Ligne {i + 1}/{len(templates)}")
+        partners = [rhyme_keys[tpl.rhyme_group]] if tpl.rhyme_group in rhyme_keys else []
+        res = adapt_line(tpl, src, tgt, tr, partner_keys=partners, use_llm=use_llm, llm_model=model or None)
+        best = res.top3[0]
+        if tpl.rhyme_group and tpl.rhyme_group not in rhyme_keys:
+            rhyme_keys[tpl.rhyme_group] = syllabify(best.text, tgt).rhyme_key
+        rows.append([i + 1, tpl.line.text, res.literal, best.text,
+                     f"{len(tpl.slots)} -> {syllabify(best.text, tgt).count}",
+                     "?" if best.total is None else int(round(100 * best.total))])
+        adaptations.append({"original": tpl.line.text, "literal": res.literal, "explanation": res.explanation,
+                            "log": res.log, "top3": [c.model_dump() for c in res.top3]})
+    import tempfile
+    out = Path(tempfile.mkdtemp()) / f"traduction_{src}_{tgt}.txt"
+    out.write_text("\n".join(f"{r[1]}\n  fidele   : {r[2]}\n  chantable: {r[3]}\n" for r in rows), encoding="utf-8")
+    return rows, adaptation_cards(adaptations), str(out)

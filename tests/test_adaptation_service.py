@@ -64,3 +64,13 @@ def test_semantic_score_flags_additions():
     s, expl = semantic_score("I sing tonight for you my love when the night is calm", "Je chante pour toi ce soir",
                              "I sing for you tonight", "fra", "eng", tr)
     assert "ajoute" in expl and s < 0.7
+
+
+def test_translation_tab_handler(monkeypatch):
+    from app.ui import handlers as H
+    from engines.translation import nllb
+    monkeypatch.setattr(nllb, "get_translator", lambda: FakeTranslator())
+    rows, cards, path = H.translate_text("Je chante pour toi ce soir", "fra", "eng", False, None,
+                                         progress=lambda *a, **k: None)
+    assert rows[0][2] == "I sing for you tonight" and rows[0][3]
+    assert "fidele" in open(path, encoding="utf-8").read() and "ps-card" in cards
